@@ -107,6 +107,29 @@ func (g *MancalaGame) Sow(player Player, position uint) (Player, Status, error) 
 		g.pits[idx]++
 	}
 
+	if g.pits[idx] == 1 && idx != SIZE && idx != SIZE*2+1 {
+		// Try to capture seeds
+		var otherIdx uint
+		var storeIdx uint
+		canCapture := false
+
+		if player == PLAYER_ONE && idx < SIZE {
+			otherIdx = 2*SIZE - idx
+			storeIdx = SIZE
+			canCapture = true
+		} else if player == PLAYER_TWO && idx > SIZE+1 {
+			otherIdx = SIZE - idx - 1
+			storeIdx = SIZE*2 + 1
+			canCapture = true
+		}
+
+		if canCapture && g.pits[otherIdx] > 0 {
+			g.pits[storeIdx] += g.pits[idx] + g.pits[otherIdx]
+			g.pits[idx] = 0
+			g.pits[otherIdx] = 0
+		}
+	}
+
 	// Swap players, unless ending in a store
 	if idx%(SIZE+1) != SIZE {
 		if player == PLAYER_ONE {
@@ -115,8 +138,6 @@ func (g *MancalaGame) Sow(player Player, position uint) (Player, Status, error) 
 			g.nextPlayer = PLAYER_ONE
 		}
 	}
-
-	// TODO: Ending in (previously) empty pit on your side lets you steal
 
 	// TODO: Ending states (empty row for either player, player with seeds on their side can collect for their store)
 

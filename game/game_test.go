@@ -194,6 +194,37 @@ func TestSingleMoveGames(t *testing.T) {
 	}
 }
 
+func TestMultipleMoveGameWithCapture(t *testing.T) {
+	expectedState := game.MancalaGameState{
+		Pits:       [2][game.SIZE]uint{{0, 1, 3, 8, 7, 0}, {0, 0, 6, 6, 5, 0}},
+		Stores:     [2]uint{10, 2},
+		NextPlayer: game.PLAYER_TWO,
+		Status:     game.STARTED,
+	}
+
+	state, err := playGame([]struct {
+		player   game.Player
+		position uint
+	}{
+		{game.PLAYER_ONE, 2},
+		{game.PLAYER_ONE, 5},
+		{game.PLAYER_TWO, 1},
+		{game.PLAYER_TWO, 5},
+		{game.PLAYER_ONE, 1},
+		{game.PLAYER_ONE, 5},
+		{game.PLAYER_ONE, 0},
+	})
+
+	if err != nil {
+		t.Errorf("Error playing game: %v", err)
+		t.FailNow()
+	}
+
+	if !isEqualGameState(expectedState, state) {
+		t.Errorf("Game failed! Expected %v, got %v", expectedState, state)
+	}
+}
+
 func playGame(moves []struct {
 	player   game.Player
 	position uint
