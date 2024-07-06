@@ -99,3 +99,121 @@ func TestFirstMoveSuccess(t *testing.T) {
 		t.Errorf("Stores are not equal! Expected %v, got %v\n", expectedStores, actualStores)
 	}
 }
+
+func TestFirstMoveFailure(t *testing.T) {
+	g := game.New()
+
+	_, _, err := g.Sow(game.PLAYER_ONE, 6)
+	if err == nil {
+		t.Error("Expected an error when trying to sow from a store")
+	}
+}
+
+func TestSingleMoveGames(t *testing.T) {
+	cases := []struct {
+		player   game.Player
+		pitIndex uint
+		expected game.MancalaGameState
+	}{
+		{
+			game.PLAYER_ONE,
+			0,
+			game.MancalaGameState{
+				Pits:       [2][game.SIZE]uint{{0, 5, 5, 5, 5, 4}, {4, 4, 4, 4, 4, 4}},
+				Stores:     [2]uint{0, 0},
+				NextPlayer: game.PLAYER_TWO,
+				Status:     game.STARTED,
+			},
+		},
+		{
+			game.PLAYER_ONE,
+			1,
+			game.MancalaGameState{
+				Pits:       [2][game.SIZE]uint{{4, 0, 5, 5, 5, 5}, {4, 4, 4, 4, 4, 4}},
+				Stores:     [2]uint{0, 0},
+				NextPlayer: game.PLAYER_TWO,
+				Status:     game.STARTED,
+			},
+		},
+		{
+			game.PLAYER_ONE,
+			2,
+			game.MancalaGameState{
+				Pits:       [2][game.SIZE]uint{{4, 4, 0, 5, 5, 5}, {4, 4, 4, 4, 4, 4}},
+				Stores:     [2]uint{1, 0},
+				NextPlayer: game.PLAYER_ONE,
+				Status:     game.STARTED,
+			},
+		},
+		{
+			game.PLAYER_ONE,
+			3,
+			game.MancalaGameState{
+				Pits:       [2][game.SIZE]uint{{4, 4, 4, 0, 5, 5}, {5, 4, 4, 4, 4, 4}},
+				Stores:     [2]uint{1, 0},
+				NextPlayer: game.PLAYER_TWO,
+				Status:     game.STARTED,
+			},
+		},
+		{
+			game.PLAYER_ONE,
+			4,
+			game.MancalaGameState{
+				Pits:       [2][game.SIZE]uint{{4, 4, 4, 4, 0, 5}, {5, 5, 4, 4, 4, 4}},
+				Stores:     [2]uint{1, 0},
+				NextPlayer: game.PLAYER_TWO,
+				Status:     game.STARTED,
+			},
+		},
+		{
+			game.PLAYER_ONE,
+			5,
+			game.MancalaGameState{
+				Pits:       [2][game.SIZE]uint{{4, 4, 4, 4, 4, 0}, {5, 5, 5, 4, 4, 4}},
+				Stores:     [2]uint{1, 0},
+				NextPlayer: game.PLAYER_TWO,
+				Status:     game.STARTED,
+			},
+		},
+	}
+
+	for caseIdx, c := range cases {
+		g := game.New()
+
+		_, _, err := g.Sow(c.player, c.pitIndex)
+		if err != nil {
+			t.Error(err)
+			t.FailNow()
+		}
+
+		state := g.GetState()
+
+		expectedPits := c.expected.Pits
+		actualPits := state.Pits
+		pitsEqual := true
+		for i := range expectedPits {
+			for j := range expectedPits[i] {
+				if expectedPits[i][j] != actualPits[i][j] {
+					pitsEqual = false
+				}
+			}
+		}
+
+		if !pitsEqual {
+			t.Errorf("Case %d: Pits are not equal! Expected %v, got %v\n", caseIdx, expectedPits, actualPits)
+		}
+
+		expectedStores := c.expected.Stores
+		actualStores := state.Stores
+		storesEqual := true
+		for i := range expectedStores {
+			if expectedStores[i] != actualStores[i] {
+				storesEqual = false
+			}
+		}
+
+		if !storesEqual {
+			t.Errorf("Case %d: Stores are not equal! Expected %v, got %v\n", caseIdx, expectedStores, actualStores)
+		}
+	}
+}
