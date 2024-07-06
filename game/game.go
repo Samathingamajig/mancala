@@ -83,15 +83,18 @@ func (g *MancalaGame) Sow(player Player, position uint) (Player, Status, error) 
 		return g.nextPlayer, g.status, fmt.Errorf("attempted to sow out of range: %d", position)
 	}
 
-	g.status = STARTED
-
 	idx := position
 	if player == PLAYER_TWO {
 		idx += SIZE + 1
 	}
 
 	seeds := g.pits[idx]
+	if seeds == 0 {
+		return g.nextPlayer, g.status, fmt.Errorf("attempted to sow from an empty pit")
+	}
 	g.pits[idx] = 0
+
+	g.status = STARTED
 
 	for ; seeds > 0; seeds-- {
 		idx++
@@ -109,16 +112,15 @@ func (g *MancalaGame) Sow(player Player, position uint) (Player, Status, error) 
 
 	if g.pits[idx] == 1 && idx != SIZE && idx != SIZE*2+1 {
 		// Try to capture seeds
-		var otherIdx uint
+		otherIdx := 2*SIZE - idx
 		var storeIdx uint
 		canCapture := false
 
 		if player == PLAYER_ONE && idx < SIZE {
-			otherIdx = 2*SIZE - idx
 			storeIdx = SIZE
 			canCapture = true
 		} else if player == PLAYER_TWO && idx > SIZE+1 {
-			otherIdx = SIZE - idx - 1
+			otherIdx = 2*SIZE - idx
 			storeIdx = SIZE*2 + 1
 			canCapture = true
 		}
@@ -139,7 +141,23 @@ func (g *MancalaGame) Sow(player Player, position uint) (Player, Status, error) 
 		}
 	}
 
-	// TODO: Ending states (empty row for either player, player with seeds on their side can collect for their store)
+	// Ending states (empty row for either player, player with seeds on their side can collect for their store)
+	playerOneSum := uint(0)
+	playerTwoSum := uint(0)
+	for i := 0; i < SIZE; i++ {
+		playerOneSum += g.pits[i]
+		playerTwoSum += g.pits[SIZE+1+i]
+	}
+
+	if playerOneSum == 0 || playerTwoSum == 0 {
+		for i := 0; i < SIZE; i++ {
+			g.pits[i] = 0
+			g.pits[SIZE+1+i] = 0
+		}
+		g.pits[SIZE] += playerOneSum
+		g.pits[SIZE*2+1] += playerTwoSum
+		g.status = FINISHED
+	}
 
 	return g.nextPlayer, g.status, nil
 }

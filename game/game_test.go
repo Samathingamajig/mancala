@@ -225,6 +225,73 @@ func TestMultipleMoveGameWithCapture(t *testing.T) {
 	}
 }
 
+func TestFullGame(t *testing.T) {
+	// This test case is based upon the first game in The Modern Rogue's "How to Play Mancala" video
+	// https://youtu.be/-fFr73ikpkQ?t=539
+
+	expectedState := game.MancalaGameState{
+		Pits:       [2][game.SIZE]uint{{0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0}},
+		Stores:     [2]uint{29, 19},
+		NextPlayer: game.PLAYER_ONE,
+		Status:     game.STARTED,
+	}
+
+	state, err := playGame([]struct {
+		player   game.Player
+		position uint
+	}{
+		{game.PLAYER_ONE, 2},
+		{game.PLAYER_ONE, 1},
+		{game.PLAYER_TWO, 0},
+		{game.PLAYER_ONE, 0},
+		{game.PLAYER_TWO, 5},
+		{game.PLAYER_ONE, 4},
+		{game.PLAYER_TWO, 4},
+		{game.PLAYER_ONE, 2},
+		{game.PLAYER_ONE, 1},
+		{game.PLAYER_TWO, 5},
+		{game.PLAYER_TWO, 3},
+		{game.PLAYER_ONE, 5},
+		{game.PLAYER_TWO, 4},
+		{game.PLAYER_TWO, 5},
+		{game.PLAYER_ONE, 0},
+		{game.PLAYER_TWO, 3},
+		{game.PLAYER_ONE, 2},
+		{game.PLAYER_TWO, 1},
+		{game.PLAYER_ONE, 5},
+		{game.PLAYER_ONE, 4},
+		{game.PLAYER_TWO, 5},
+		{game.PLAYER_TWO, 4},
+		{game.PLAYER_ONE, 1},
+		{game.PLAYER_TWO, 0},
+		{game.PLAYER_ONE, 5},
+		{game.PLAYER_ONE, 3},
+		{game.PLAYER_TWO, 5},
+		{game.PLAYER_TWO, 0},
+		{game.PLAYER_ONE, 0},
+		{game.PLAYER_TWO, 4},
+		{game.PLAYER_ONE, 1},
+		{game.PLAYER_TWO, 1},
+		{game.PLAYER_ONE, 2},
+		// Here, player one should capture, but in the video they don't
+		// so everything after this is similar to how they played
+		{game.PLAYER_TWO, 4},
+		{game.PLAYER_ONE, 5},
+		{game.PLAYER_ONE, 4},
+		{game.PLAYER_TWO, 3},
+		{game.PLAYER_ONE, 5},
+	})
+
+	if err != nil {
+		t.Errorf("Error playing game: %v", err)
+		t.FailNow()
+	}
+
+	if !isEqualGameState(expectedState, state) {
+		t.Errorf("Game failed! Expected %v, got %v", expectedState, state)
+	}
+}
+
 func playGame(moves []struct {
 	player   game.Player
 	position uint
