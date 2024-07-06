@@ -178,42 +178,56 @@ func TestSingleMoveGames(t *testing.T) {
 	}
 
 	for caseIdx, c := range cases {
-		g := game.New()
+		state, err := playGame([]struct {
+			player   game.Player
+			position uint
+		}{{c.player, c.pitIndex}})
 
-		_, _, err := g.Sow(c.player, c.pitIndex)
 		if err != nil {
-			t.Error(err)
+			t.Errorf("Error playing game %d: %v", caseIdx, err)
 			t.FailNow()
 		}
 
-		state := g.GetState()
-
-		expectedPits := c.expected.Pits
-		actualPits := state.Pits
-		pitsEqual := true
-		for i := range expectedPits {
-			for j := range expectedPits[i] {
-				if expectedPits[i][j] != actualPits[i][j] {
-					pitsEqual = false
-				}
-			}
-		}
-
-		if !pitsEqual {
-			t.Errorf("Case %d: Pits are not equal! Expected %v, got %v\n", caseIdx, expectedPits, actualPits)
-		}
-
-		expectedStores := c.expected.Stores
-		actualStores := state.Stores
-		storesEqual := true
-		for i := range expectedStores {
-			if expectedStores[i] != actualStores[i] {
-				storesEqual = false
-			}
-		}
-
-		if !storesEqual {
-			t.Errorf("Case %d: Stores are not equal! Expected %v, got %v\n", caseIdx, expectedStores, actualStores)
+		if !isEqualGameState(c.expected, state) {
+			t.Errorf("Game %d failed! Expected %v, got %v", caseIdx, c.expected, state)
 		}
 	}
+}
+
+func playGame(moves []struct {
+	player   game.Player
+	position uint
+}) (game.MancalaGameState, error) {
+	g := game.New()
+
+	for _, move := range moves {
+		_, _, err := g.Sow(move.player, move.position)
+		if err != nil {
+			return g.GetState(), err
+		}
+	}
+
+	return g.GetState(), nil
+}
+
+func isEqualGameState(expected game.MancalaGameState, actual game.MancalaGameState) bool {
+	expectedPits := expected.Pits
+	actualPits := actual.Pits
+	for i := range expectedPits {
+		for j := range expectedPits[i] {
+			if expectedPits[i][j] != actualPits[i][j] {
+				return false
+			}
+		}
+	}
+
+	expectedStores := expected.Stores
+	actualStores := actual.Stores
+	for i := range expectedStores {
+		if expectedStores[i] != actualStores[i] {
+			return false
+		}
+	}
+
+	return true
 }
